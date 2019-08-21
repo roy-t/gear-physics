@@ -12,7 +12,7 @@ namespace GearPhysics.Shapes
         private readonly short[] indices;
         private readonly Texture2D texture;
 
-        public Shape(GraphicsDevice device, Color color, List<Vector2> outline)
+        public Shape(GraphicsDevice device, Color color, List<Vector2> outline, bool connect)
         {
             texture = new Texture2D(device, 1, 1);
             texture.SetData(new Color[] { color });
@@ -31,7 +31,11 @@ namespace GearPhysics.Shapes
                 vertices[i] = new VertexPositionColor(new Vector3(vertex.X, 0, vertex.Y), color);
 
                 indices[ii++] = (short)i;
-                indices[ii++] = (short)((i + 1) % vertices.Length);
+
+                if (connect)
+                {
+                    indices[ii++] = (short)((i + 1) % vertices.Length);
+                }
 
                 min.X = Min(min.X, vertex.X);
                 min.Y = Min(min.Y, vertex.Y);

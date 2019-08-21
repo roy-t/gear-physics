@@ -49,7 +49,6 @@
     <Compile Include="Bodies\Gear.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Shapes\GearShapeFactory.cs" />
     <Compile Include="Shapes\Shape.cs" />
     <Compile Include="SimLoop.cs" />
   </ItemGroup>

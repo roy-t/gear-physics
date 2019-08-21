@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using GearPhysics.Bodies;
-using GearPhysics.Shapes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -44,10 +43,8 @@ namespace GearPhysics
             var toothHeight = 4.0f;
             var toothOverlap = 0.75f;
 
-            var outline = GearShapeFactory.CreateGear(radius, teeth, tipRatio, toothHeight);
-
-            var gearA = new Gear(new Shape(GraphicsDevice, Color.Red, outline), Vector3.Zero);
-            var gearB = new Gear(new Shape(GraphicsDevice, Color.Blue, outline), Vector3.Right * (radius + toothHeight * toothOverlap) * 2);
+            var gearA = new Gear(GraphicsDevice, Color.Red, Vector3.Zero, radius, teeth, tipRatio, toothHeight);
+            var gearB = new Gear(GraphicsDevice, Color.Blue, Vector3.Right * (radius + toothHeight * toothOverlap) * 2, radius, teeth, tipRatio, toothHeight);                
 
             gearList = new List<Gear>() { gearA, gearB };
 
@@ -60,8 +57,7 @@ namespace GearPhysics
 
             if (keyboard.IsKeyDown(Keys.Space))
             {
-                gearList[0].Spin(0.075);
-                gearList[1].Spin(-0.075);
+                gearList[0].Spin(0.075);                
 
             }
             else
@@ -97,7 +93,10 @@ namespace GearPhysics
 
                 effect.World = gear.World;
                 effect.CurrentTechnique.Passes[0].Apply();
-                gear.Shape.Draw(GraphicsDevice);
+                gear.GearShape.Draw(GraphicsDevice);
+                gear.LeadingEdgesShape.Draw(GraphicsDevice);
+                gear.TrailingEdgesShape.Draw(GraphicsDevice);
+
             }
                                     
             base.Draw(gameTime);
