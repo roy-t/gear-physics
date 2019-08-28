@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using GearPhysics.Shapes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -9,22 +10,21 @@ namespace GearPhysics.Bodies
     {
         private const double PI = 3.141592653589793238462643383279502884;
         private readonly GraphicsDevice Device;
-
-        private double angle; // radians
-        private double angularVelocity; // radians per second
+        
+        private const double angularFriction = 0.0033f;
+        private const double MinAngularVelocity = 0.02;
 
         public Line(GraphicsDevice device, Color color, Vector3 position, float length)
         {
             this.Device = device;
             this.Position = position;
+            this.Length = length;
             this.World = Matrix.CreateTranslation(position);
 
-            var flatPosition = new Vector2(position.X, position.Z);
-            
             Outline = new List<Vector2>()
             {
-                flatPosition - (Vector2.UnitX * (length / 2)),
-                flatPosition + (Vector2.UnitX * (length / 2))
+                -Vector2.UnitX * (length / 2),
+                Vector2.UnitX * (length / 2)
             };
 
             this.LineShape = new Shape(device, color, Outline, false);
@@ -34,17 +34,27 @@ namespace GearPhysics.Bodies
         public List<Vector2> OutlineTransformed { get; private set; }
 
         public Vector3 Position { get; }
+        public float Length { get; }
+        public double Angle { get; set; }
+        // radians per second
+        public double AngularVelocity { get; private set; }
+
         public Matrix World { get; set; }
         public Shape LineShape { get; }
 
-        public void Spin(double angularVelocity) => this.angularVelocity = angularVelocity;
+        public void Spin(double angularVelocity) => this.AngularVelocity = angularVelocity;
 
         public void Update(GameTime gameTime)
         {
-            var instantAngularVelocity = angularVelocity * gameTime.ElapsedGameTime.TotalSeconds;
-            angle = (angle + instantAngularVelocity) % (PI * 2);
+            var elapsed = gameTime.ElapsedGameTime.TotalSeconds;
+            var instantAngularVelocity = AngularVelocity * elapsed;
+            AngularVelocity *= (1.0 - angularFriction);
 
-            World = Matrix.CreateRotationY((float)angle) * Matrix.CreateTranslation(Position);
+            AngularVelocity = Math.Abs(AngularVelocity) < MinAngularVelocity ? 0 : AngularVelocity;
+
+            Angle = (Angle + instantAngularVelocity) % (PI * 2);
+
+            World = Matrix.CreateRotationY((float)Angle) * Matrix.CreateTranslation(Position);
 
 
             var outlineTransformed = new List<Vector2>(Outline.Count);
@@ -52,10 +62,7 @@ namespace GearPhysics.Bodies
             {
                 var v = Outline[i];
                 var v3 = new Vector3(v.X, 0, v.Y);
-
                 var v3Transformed = Vector3.Transform(v3, World);
-                // TODO: what if I use Vector2.Transform?)
-
                 outlineTransformed.Add(new Vector2(v3Transformed.X, v3Transformed.Z));                
             }
 
