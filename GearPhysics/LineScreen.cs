@@ -35,13 +35,13 @@ namespace GearPhysics
         {
             if (keyboard.IsKeyDown(Keys.Space))
             {
-                LineList[0].Spin(0.075);
+                LineList[0].Spin(0.75);
                 //LineList[1].Spin(-0.75);
 
             }
             else
             {
-                LineList[0].Spin(0);
+                //LineList[0].Spin(0);
                 //LineList[1].Spin(0);
             }
 
@@ -69,8 +69,7 @@ namespace GearPhysics
                 Indicators.Add(new Shape(Device, Color.Yellow, PointToCross(intersectionPoint, 0.1f), false));
 
                 // Proportional increase in angular velocity so that things get unstuck
-                var d = LineMath.PenetrationOfAIntoB(LineList[0].OutlineTransformed.ToArray(), intersectionPoint);                
-
+                var d = LineMath.PenetrationOfAIntoB(LineList[0].OutlineTransformed.ToArray(), intersectionPoint);
                 var dRatio = d / LineList[0].Length;
 
                 LineList[1].Spin(-LineList[0].AngularVelocity * (1.0 + dRatio));

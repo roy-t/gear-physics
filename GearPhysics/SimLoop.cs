@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using GearPhysics.v2;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -48,10 +49,11 @@ namespace GearPhysics
             screens = new List<IScreen>
             {
                 new GearsScreen(GraphicsDevice),
-                new LineScreen(GraphicsDevice)
+                new LineScreen(GraphicsDevice),
+                new V2Screen(GraphicsDevice),
             };
 
-            current = screens[1];
+            current = screens[2];
 
             base.LoadContent();
         }
