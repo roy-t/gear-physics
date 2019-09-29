@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
 
@@ -73,7 +74,7 @@ namespace GearPhysics.GearMath
             return new Vector2(x, y);
         }
 
-        public static bool PenetrationOfAIntoB(Vector2[] lineA, Vector2[] lineB, out float penetration)
+        public static bool PenetrationOfAIntoB(IList<Vector2> lineA, IList<Vector2> lineB, out float penetration)
         {
             penetration = 0.0f;
 
@@ -86,12 +87,12 @@ namespace GearPhysics.GearMath
             return false;
         }
 
-        public static float PenetrationOfAIntoB(Vector2[] lineA, Vector2 intersectionPoint)
+        public static float PenetrationOfAIntoB(IList<Vector2> lineA, Vector2 intersectionPoint)
         {
             return Math.Min(Vector2.Distance(lineA[0], intersectionPoint), Vector2.Distance(lineA[1], intersectionPoint));
         }
 
-        public static bool Intersection(Vector2[] lineA, Vector2[] lineB, out Vector2 intersectionPoint)
+        public static bool Intersection(IList<Vector2> lineA, IList<Vector2> lineB, out Vector2 intersectionPoint)
         {
             intersectionPoint = Vector2.Zero;
 

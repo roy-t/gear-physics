@@ -1,0 +1,3 @@
+- Move to forces instead of using fixed speeds
+- Apply force when leading edges collide from penetration + spin
+- Apply force when trailing edges collide from penetration

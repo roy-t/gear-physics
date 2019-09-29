@@ -80,7 +80,7 @@ namespace GearPhysics.v2
             }
         }
 
-        private double? Gear(Line a, Line b)
+        private double? Gear(Line a, Line b, float amount)
         {
             // TODO leading on leading should add speed, while trailing on trailing should reduce speed
             if (LineMath.Intersection(a.OutlineTransformed.ToArray(), b.OutlineTransformed.ToArray(), out var intersectionPoint))
@@ -93,13 +93,13 @@ namespace GearPhysics.v2
 
                 var spin = -a.AngularVelocity * (1.0 + dRatio);
 
-                return spin;
+                return amount;
             }
 
             return null;
         }
 
-        private double? Spin(List<Line> a, List<Line>b)
+        private double? Spin(List<Line> a, List<Line> b, float amount)
         {
             double? spin = null;
             for (var i = 0; i < a.Count; i++)
@@ -109,7 +109,7 @@ namespace GearPhysics.v2
                 {
                     var lineB = b[y];
 
-                    spin = Gear(lineA, lineB);
+                    spin = Gear(lineA, lineB, amount);
                     if (spin != null)
                     {
                         return spin;
@@ -142,9 +142,9 @@ namespace GearPhysics.v2
         {
             Indicators.Clear();
 
-            var spinA = keyboard.IsKeyDown(Keys.Space) ?  new double?(.75) : null;
-            var spinB = Spin(GearA, GearB);
-            var spinC = Spin(GearB, GearC);
+            var spinA = 25 * gameTime.ElapsedGameTime.TotalSeconds;// keyboard.IsKeyDown(Keys.Space) ?  new double?(.75) : null;
+            var spinB = Spin(GearA, GearB, (float)-spinA);
+            var spinC = Spin(GearB, GearC, (float)spinA);
 
             var shift = 0.0f;
             if(keyboard.IsKeyDown(Keys.Left))

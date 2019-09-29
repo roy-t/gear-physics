@@ -70,6 +70,11 @@ namespace GearPhysics.Bodies
 
             Angle = (Angle + instantAngularVelocity) % (PI * 2);
 
+            Update();           
+        }
+
+        public void Update()
+        {
             World = Matrix.CreateRotationY((float)Angle) * Matrix.CreateTranslation(Position);
 
 
@@ -79,7 +84,7 @@ namespace GearPhysics.Bodies
                 var v = Outline[i];
                 var v3 = new Vector3(v.X, 0, v.Y);
                 var v3Transformed = Vector3.Transform(v3, World);
-                outlineTransformed.Add(new Vector2(v3Transformed.X, v3Transformed.Z));                
+                outlineTransformed.Add(new Vector2(v3Transformed.X, v3Transformed.Z));
             }
 
             OutlineTransformed = outlineTransformed;

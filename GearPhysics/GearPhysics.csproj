@@ -59,6 +59,8 @@
     <Compile Include="v2\GearDescription.cs" />
     <Compile Include="v2\LineDescription.cs" />
     <Compile Include="v2\V2Screen.cs" />
+    <Compile Include="v3\Gear.cs" />
+    <Compile Include="v3\V3Screen.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
