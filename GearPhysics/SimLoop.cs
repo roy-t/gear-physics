@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using GearPhysics.v2;
 using GearPhysics.v3;
+using GearPhysics.v4;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -53,9 +54,10 @@ namespace GearPhysics
                 new LineScreen(GraphicsDevice),
                 new V2Screen(GraphicsDevice),
                 new V3Screen(GraphicsDevice),
+                new V4Screen(GraphicsDevice),
             };
 
-            current = screens[3];
+            current = screens[4];
 
             base.LoadContent();
         }

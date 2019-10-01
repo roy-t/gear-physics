@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Xna.Framework;
 
 using static System.Diagnostics.Debug;
@@ -28,12 +29,106 @@ namespace GearPhysics.v2
         public float RootDiameter { get; }
         public int Teeth { get; }
 
+        // Calculates a gear with perfect equilateral triangles as teeth teeth
+        // TODO: position it properly!
+        public static GearDescription DescribeGear(float toothSideLength, int teeth)
+        {
+            Assert(toothSideLength > float.Epsilon);
+            Assert(teeth > 0);
+
+            var halfToothSideLength = toothSideLength / 2.0f;
+
+            //var diameter = Diameter(toothSideLength, teeth);
+            var diameter = (toothSideLength * teeth) / MathHelper.Pi;
+            var diameterDifference = (float)(halfToothSideLength * Math.Sqrt(3.0f));
+
+            
+            var angleStep = MathHelper.TwoPi / teeth;
+
+            var description = new GearDescription(diameter + diameterDifference, diameter, teeth);            
+
+            var center = new Vector2(0, 0);
+
+            var lastPosition = new Vector2(diameter / 2, -halfToothSideLength);
+            var lastAngle = 0.0f;
+            for(var i = 0; i < teeth; i++)
+            {
+                var min = lastPosition;
+                var forward = Vector2.TransformNormal(Vector2.UnitY, Matrix.CreateRotationZ(lastAngle));
+                var max = min + (forward * toothSideLength);
+
+                var tipBase = (min + max) / 2.0f;
+                var normal = Vector2.Normalize(tipBase - center);
+                var tipTop = tipBase + (normal * diameterDifference);
+
+
+                description.ClockwiseEdges.Add(new LineDescription(tipTop, min));
+                description.CounterClockwiseEdges.Add(new LineDescription(tipTop, max));
+                description.Edges.Add(new LineDescription(min, max));
+
+                //description.ClockwiseEdges.Add(new LineDescription(tipTop, min));
+                //description.CounterClockwiseEdges.Add(new LineDescription(tipTop, max));
+
+
+                //description.ClockwiseEdges.Add(new LineDescription(center, tipBase));
+                //description.CounterClockwiseEdges.Add(new LineDescription(min, max));
+
+                lastPosition = max;
+                lastAngle += angleStep;                
+            }
+
+
+            return description;
+            
+            //var rootDiameter = (toothSideLength * teeth) / MathHelper.Pi;
+
+            //// The height of an equilateral triangle is the length of a side divided by 2 time sqrt(3)
+            
+            //var diameterDifference = (float)(toothSideLength * Math.Sqrt(3.0f));
+            //var outsideDiameter = rootDiameter + diameterDifference;
+
+            //return DescribeGear(outsideDiameter, rootDiameter, teeth, 0.0f);
+        }
+
+        private static float Diameter(float toothSideLength, int teeth)
+        {
+            var points = new List<Vector2>();
+
+            var halfToothSideLength = toothSideLength / 2.0f;
+
+            var angleStep = MathHelper.TwoPi / teeth;
+
+            var lastPosition = new Vector2(0, -halfToothSideLength);
+            var lastAngle = 0.0f;
+            for (var i = 0; i < teeth; i++)
+            {
+                var min = lastPosition;
+                var forward = Vector2.TransformNormal(Vector2.UnitY, Matrix.CreateRotationZ(lastAngle));
+                var max = min + (forward * toothSideLength);
+
+                var tipBase = (min + max) / 2.0f;
+
+                points.Add(max);
+
+                lastPosition = max;
+                lastAngle += angleStep;
+            }
+
+
+
+            var xMax = points.Select(v => v.X).Max();
+            var xMin = points.Select(v => v.X).Min();
+
+
+            return xMax - xMin;
+        }
+
 
         public static GearDescription DescribeGear(float outsideDiameter, float rootDiameter, int teeth, float profileRatio)
         {
             Assert(outsideDiameter > rootDiameter);
             Assert(teeth > 0);
-            Assert(profileRatio > 0.0f && profileRatio < 1.0f);
+            Assert(profileRatio >= 0.0f && profileRatio < 1.0f);
 
             var outsideRadius = outsideDiameter / 2.0f;
             var rootRadius = rootDiameter / 2.0f;
@@ -68,10 +163,11 @@ namespace GearPhysics.v2
                 description.ClockwiseEdges.Add(rise);
                 description.Edges.Add(rise);
 
-
-                var tip = new LineDescription(riseEnd, fallStart);
-                description.Edges.Add(tip);
-
+                if (profileRatio > 0.0f)
+                {
+                    var tip = new LineDescription(riseEnd, fallStart);
+                    description.Edges.Add(tip);
+                }
 
                 var fall = new LineDescription(fallStart, fallEnd);
                 description.CounterClockwiseEdges.Add(fall);

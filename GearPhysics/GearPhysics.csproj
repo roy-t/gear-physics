@@ -61,6 +61,8 @@
     <Compile Include="v2\V2Screen.cs" />
     <Compile Include="v3\Gear.cs" />
     <Compile Include="v3\V3Screen.cs" />
+    <Compile Include="v4\Gear.cs" />
+    <Compile Include="v4\V4Screen.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
