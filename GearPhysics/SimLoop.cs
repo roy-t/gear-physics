@@ -2,6 +2,7 @@
 using GearPhysics.v2;
 using GearPhysics.v3;
 using GearPhysics.v4;
+using GearPhysics.v5;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -10,7 +11,7 @@ namespace GearPhysics
 {
     sealed class SimLoop : Game
     {
-        private const float ZoomSpeed = 0.2f;
+        private const float ZoomSpeed = 2.2f;
         private const float TranslateSpeed = 2.2f;
         private readonly GraphicsDeviceManager Graphics;
         private KeyboardState lastState;
@@ -55,9 +56,10 @@ namespace GearPhysics
                 new V2Screen(GraphicsDevice),
                 new V3Screen(GraphicsDevice),
                 new V4Screen(GraphicsDevice),
+                new V5Screen(GraphicsDevice)
             };
 
-            current = screens[4];
+            current = screens[5];
 
             base.LoadContent();
         }

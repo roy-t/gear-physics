@@ -62,8 +62,11 @@
     <Compile Include="v3\Gear.cs" />
     <Compile Include="v3\V3Screen.cs" />
     <Compile Include="v4\Gear.cs" />
+    <Compile Include="v5\Polar2.cs" />
     <Compile Include="v4\Tooth.cs" />
     <Compile Include="v4\V4Screen.cs" />
+    <Compile Include="v5\Gear.cs" />
+    <Compile Include="v5\V5Screen.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -73,5 +76,6 @@
       <Version>3.7.1.189</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
