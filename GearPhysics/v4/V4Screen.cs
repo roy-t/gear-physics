@@ -85,6 +85,7 @@ namespace GearPhysics.v4
                 this.Gears[0].Spin(radiansInStep);
                 for (var i = 0; i < this.Gears.Count - 1; i++)
                 {
+                    // TODO: WRONG!!!
                     this.Gears[i].Transfer(radiansInStep, this.Gears[i + 1]);
                 }
             }

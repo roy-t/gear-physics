@@ -11,30 +11,25 @@ namespace GearPhysics.v5
         private readonly List<Line> Lines;
         private readonly GraphicsDevice Device;
 
+        private float baseAngle;
+
         public Gear(GraphicsDevice device, Vector2 position, int n)
             : this(device, position, n, n / 4.0f, 4.0f, 20.0f)
         {
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
         /// <param name="n">Number of teeth</param>
         /// <param name="d">Pitch diameter</param>
         /// <param name="p">Diametrical pitch</param>
         /// <param name="pa">Pressure angle (in degrees)</param>
         /// <param name="I">internal</param>
         public Gear(GraphicsDevice device, Vector2 position, int n, float d, float p, float pa, bool I = false)
-        {
-            // Not yet:
-            // ca, connection angle
-            // ID, id of the gear
-            // H hole
-            // S spokes
-            // SM spokem (?)
+        {           
+            // TODO: give everything a sensible name
+            // TODO: do we need so many points, identify imporant points and remove others
 
-            var od = (n + (I ? 2.3f : 2.0f)) / p; // outer diameter
-            var rd = (n - (I ? 2 : 2.3f)) / p; // root diameter
+            var od = (n + (I ? 2.3f : 2.0f)) / p;
+            var rd = (n - (I ? 2 : 2.3f)) / p; 
             var bc = (float)(d * Math.Cos(pa * Math.PI / 180.0));
             var rmin = rd / 2;
             var rmax = od / 2;
@@ -95,8 +90,9 @@ namespace GearPhysics.v5
 
             polarPoints[0] = new Polar2(rmin, fpa);
 
+            // Is this part ever called? 
             while (polarPoints[m - 1].A > ma / 2.0f)
-            {
+            {                
                 Splice(polarPoints, m - 1, 1);
                 m--;
             }
@@ -124,8 +120,8 @@ namespace GearPhysics.v5
             for (var i = 0; i < polarPoints.Count; i++)
             {
                 var point = this.PolarTolinear(polarPoints[i]);
-                var x = this.Fix6(point.X);
-                var y = this.Fix6(point.Y);
+                var x = point.X;
+                var y = point.Y;
 
                 this.Points.Add(new Vector2(x, y));
             }
@@ -134,7 +130,7 @@ namespace GearPhysics.v5
             this.Position = position;
             this.N = n;
 
-
+            // TODO: We're somehow mirroring something here which is why we need the weird minus in the ComputeRotation function
             this.Lines = new List<Line>();
 
             for (var i = 1; i < this.Points.Count; i++)
@@ -155,13 +151,22 @@ namespace GearPhysics.v5
             closingLine.Position = new Vector3(position.X, 0, position.Y);
             closingLine.Update();
             this.Lines.Add(closingLine);
-        }
+
+
+            this.Rsc = d * 1.0f / 2;
+            this.baseAngle = ac;            
+        }        
 
         public List<Vector2> Points { get; }
         public float Rotation { get; private set; }
         public Vector2 Position { get; }
         public int N { get; }
+        public float Rsc { get; }
 
+        // TODO: make everything radians!
+        public float JointAngleDeg { get; set; }
+
+        // TODO: move to math lib
         private Polar2 LinearToPolar(Vector2 c)
         {
             var x = c.X;
@@ -179,6 +184,7 @@ namespace GearPhysics.v5
             return new Polar2(r, a);
         }
 
+        // TODO: move to math lib
         private Vector2 PolarTolinear(Polar2 p)
         {
             var r = p.R;
@@ -189,8 +195,6 @@ namespace GearPhysics.v5
             var y = -(float)Math.Sin(a) * r;
             return new Vector2(x, y);
         }
-
-        private float Fix6(float v) => (float)Math.Round(1000.0f * v) / 1000.0f;
 
         public static List<T> Splice<T>(List<T> source, int index, int count)
         {
@@ -206,13 +210,31 @@ namespace GearPhysics.v5
             for (var i = 0; i < this.Lines.Count; i++)
             {
                 var line = this.Lines[i];
-                line.Angle = this.Rotation;
+                line.Angle = ComputeRotation();
                 line.Update();
             }
         }
 
+        public void SetRotation(float radians)
+        {
+            this.Rotation = radians;
+            for (var i = 0; i < this.Lines.Count; i++)
+            {
+                var line = this.Lines[i];
+                line.Angle = ComputeRotation();
+                line.Update();
+            }
+        }
+
+        private float ComputeRotation()
+        {
+            // TODO: WTF THIS MINUS SIGN, do we mirror something that we have to correct here, see above?
+            return -(this.Rotation + MathHelper.ToRadians(this.baseAngle));
+        }
+
         public void Draw(BasicEffect effect)
         {
+            // TODO: we don't really need the heavy lines struct anymore. let's simplify and draw geometry immediately in one go!
             for (var i = 0; i < this.Lines.Count; i++)
             {
                 var line = this.Lines[i];
