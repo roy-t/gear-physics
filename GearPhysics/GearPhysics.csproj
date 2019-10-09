@@ -62,6 +62,7 @@
     <Compile Include="v3\Gear.cs" />
     <Compile Include="v3\V3Screen.cs" />
     <Compile Include="v4\Gear.cs" />
+    <Compile Include="v4\Tooth.cs" />
     <Compile Include="v4\V4Screen.cs" />
   </ItemGroup>
   <ItemGroup>

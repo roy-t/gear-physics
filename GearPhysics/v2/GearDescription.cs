@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Xna.Framework;
 
 using static System.Diagnostics.Debug;
@@ -39,17 +38,17 @@ namespace GearPhysics.v2
             var halfToothSideLength = toothSideLength / 2.0f;
 
             //var diameter = Diameter(toothSideLength, teeth);
-            var diameter = (toothSideLength * teeth) / MathHelper.Pi;
-            var diameterDifference = (float)(halfToothSideLength * Math.Sqrt(3.0f));
+            var rootDiameter = GetRootDiameter(toothSideLength, teeth);
+            var toothHeight = (float)(halfToothSideLength * Math.Sqrt(3.0f));
 
             
             var angleStep = MathHelper.TwoPi / teeth;
 
-            var description = new GearDescription(diameter + diameterDifference, diameter, teeth);            
+            var description = new GearDescription(rootDiameter + (toothHeight * 2), rootDiameter, teeth);            
 
             var center = new Vector2(0, 0);
 
-            var lastPosition = new Vector2(diameter / 2, -halfToothSideLength);
+            var lastPosition = new Vector2(rootDiameter / 2, -halfToothSideLength);
             var lastAngle = 0.0f;
             for(var i = 0; i < teeth; i++)
             {
@@ -59,7 +58,7 @@ namespace GearPhysics.v2
 
                 var tipBase = (min + max) / 2.0f;
                 var normal = Vector2.Normalize(tipBase - center);
-                var tipTop = tipBase + (normal * diameterDifference);
+                var tipTop = tipBase + (normal * toothHeight);
 
 
                 description.ClockwiseEdges.Add(new LineDescription(tipTop, min));
@@ -90,38 +89,7 @@ namespace GearPhysics.v2
             //return DescribeGear(outsideDiameter, rootDiameter, teeth, 0.0f);
         }
 
-        private static float Diameter(float toothSideLength, int teeth)
-        {
-            var points = new List<Vector2>();
-
-            var halfToothSideLength = toothSideLength / 2.0f;
-
-            var angleStep = MathHelper.TwoPi / teeth;
-
-            var lastPosition = new Vector2(0, -halfToothSideLength);
-            var lastAngle = 0.0f;
-            for (var i = 0; i < teeth; i++)
-            {
-                var min = lastPosition;
-                var forward = Vector2.TransformNormal(Vector2.UnitY, Matrix.CreateRotationZ(lastAngle));
-                var max = min + (forward * toothSideLength);
-
-                var tipBase = (min + max) / 2.0f;
-
-                points.Add(max);
-
-                lastPosition = max;
-                lastAngle += angleStep;
-            }
-
-
-
-            var xMax = points.Select(v => v.X).Max();
-            var xMin = points.Select(v => v.X).Min();
-
-
-            return xMax - xMin;
-        }
+        public static float GetRootDiameter(float toothSideLength, int teeth) => (toothSideLength * teeth) / MathHelper.Pi;
 
 
         public static GearDescription DescribeGear(float outsideDiameter, float rootDiameter, int teeth, float profileRatio)
