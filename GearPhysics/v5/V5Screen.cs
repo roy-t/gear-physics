@@ -57,7 +57,7 @@ namespace GearPhysics.v5
         {
             var spin = (float)gameTime.ElapsedGameTime.TotalSeconds * MathHelper.PiOver4;
 
-            if (!keyboard.IsKeyDown(Keys.Space))
+            if (keyboard.IsKeyDown(Keys.Space))
             {
                 UpdateGears(spin);
             }

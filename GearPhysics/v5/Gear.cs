@@ -28,24 +28,32 @@ namespace GearPhysics.v5
             // TODO: give everything a sensible name
             // TODO: do we need so many points, identify imporant points and remove others
 
-            var od = (n + (I ? 2.3f : 2.0f)) / p;
-            var rd = (n - (I ? 2 : 2.3f)) / p; 
+            var outerDiameter = (n + (I ? 2.3f : 2.0f)) / p;
+            var innerDiameter = (n - (I ? 2 : 2.3f)) / p; 
             var bc = (float)(d * Math.Cos(pa * Math.PI / 180.0));
-            var rmin = rd / 2;
-            var rmax = od / 2;
+            var radiusMin = innerDiameter / 2;
+            var radiusMax = outerDiameter / 2;
             var rbase = bc / 2;
 
             var ac = 0.0f;
-            var aca = 0.0f;
                         
             var step = 0.1f;
             var first = true;
             var fix = 0;
 
             var polarPoints = new List<Polar2>();
-            polarPoints.Add(new Polar2(rmin, 0));
+            polarPoints.Add(new Polar2(radiusMin, 0));
 
             // All hard to follow since its in polar coordinates, TODO: describe better!
+
+
+            // Create a single side of a single tooth, it is nicely curved
+            /*             
+             *     \
+             *      \ 
+             *       |
+             *       /
+             */ 
             for (var i = 1.0f; i < 100.0f; i += step)
             {
                 var bpl = this.PolarTolinear(new Polar2(rbase, -i));
@@ -53,7 +61,7 @@ namespace GearPhysics.v5
                 var opl = this.PolarTolinear(new Polar2(len, -i + 90));
                 var np = this.LinearToPolar(new Vector2(bpl.X + opl.X, bpl.Y + opl.Y));
 
-                if (np.R >= rmin)
+                if (np.R >= radiusMin)
                 {
                     if (first)
                     {
@@ -63,9 +71,8 @@ namespace GearPhysics.v5
                     if (np.R < d / 2)
                     {
                         ac = np.A;
-                        aca = i;
                     }
-                    if (np.R > rmax)
+                    if (np.R > radiusMax)
                     {
                         if (++fix < 10)
                         {
@@ -74,7 +81,7 @@ namespace GearPhysics.v5
                             continue;
                         }
 
-                        np.R = rmax;
+                        np.R = radiusMax;
                         polarPoints.Add(np);
                         break;
                     }
@@ -82,17 +89,23 @@ namespace GearPhysics.v5
                 }
             }
 
-            // Mirror
+            // Mirror the side and connect the two via along the top
+            /*             
+             *    /---\
+             *   /     \ 
+             *  |       |
+             *  \       /
+             */
             var fa = 360 / (float)n;
-            var ma = fa / 2 + 2 * ac;
+            var ma = (fa / 2) + (2 * ac);
             var fpa = (fa - ma) > 0 ? 0 : -(fa - ma) / 2;
             var m = polarPoints.Count;
 
-            polarPoints[0] = new Polar2(rmin, fpa);
+            polarPoints[0] = new Polar2(radiusMin, fpa);
 
             // Is this part ever called? 
             while (polarPoints[m - 1].A > ma / 2.0f)
-            {                
+            {
                 Splice(polarPoints, m - 1, 1);
                 m--;
             }
@@ -104,6 +117,8 @@ namespace GearPhysics.v5
                 polarPoints.Add(new Polar2(bp.R, na));
             }
 
+            // Copy and paste these teeth equal along the entire gear
+            // we now have a full gear, in polar coordinates
             m = polarPoints.Count;
             for (var i = 1; i < n; i++)
             {
@@ -116,6 +131,7 @@ namespace GearPhysics.v5
             }
 
 
+            // Convert back from polar to linear coordinates
             this.Points = new List<Vector2>();
             for (var i = 0; i < polarPoints.Count; i++)
             {

@@ -56,7 +56,7 @@ namespace GearPhysics
                 new V2Screen(GraphicsDevice),
                 new V3Screen(GraphicsDevice),
                 new V4Screen(GraphicsDevice),
-                new V5Screen(GraphicsDevice)
+                new V5Screen(GraphicsDevice),
             };
 
             current = screens[5];
