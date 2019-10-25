@@ -5,22 +5,34 @@ namespace GearSim.Shapes
 {
     public struct Polar2 : IEquatable<Polar2>
     {
+        /// <summary>
+        /// Construct a polar coordinate
+        /// </summary>
+        /// <param name="r">radial distance from a hypothetical reference point</param>
+        /// <param name="a">Angle (in degrees) from the reference point</param>
         public Polar2(float r, float a)
         {
             this.R = r;
             this.A = a;
         }
 
+        /// <summary>
+        /// Radial distance from the reference point
+        /// </summary>
         public float R { get; set; }
+
+        /// <summary>
+        /// Angle (in degrees) from the reference point
+        /// </summary>
         public float A { get; set; }
 
-        public static Polar2 LinearToPolar(Vector2 c)
-        {
-            var x = c.X;
-            var y = c.Y;
-            var r = (float)Math.Sqrt(x * x + y * y);
-            var a = MathHelper.ToDegrees((float)Math.Asin(y / r));
+        public static Polar2 LinearToPolar(Vector2 position) => LinearToPolar(position.X, position.Y);
 
+        public static Polar2 LinearToPolar(float x, float y)
+        {
+            var r = (float)Math.Sqrt((x * x) + (y * y));
+
+            var a = MathHelper.ToDegrees((float)Math.Asin(y / r));
 
             if (x < 0)
             {
@@ -36,7 +48,7 @@ namespace GearSim.Shapes
             var r = this.R;
             var a = this.A;
 
-            a = MathHelper.ToRadians(((a + 360) % 360));
+            a = MathHelper.ToRadians((a + 360) % 360);
             var x = (float)Math.Cos(a) * r;
             var y = -(float)Math.Sin(a) * r;
             return new Vector2(x, y);
@@ -129,9 +141,8 @@ namespace GearSim.Shapes
             return false;
         }
 
-        public override int GetHashCode()
-        {
-            return R.GetHashCode() * 397 ^ A.GetHashCode();
-        }
+        public override int GetHashCode() => (this.R.GetHashCode() * 397) ^ this.A.GetHashCode();
+
+        public override string ToString() => $"R: {this.R}, A: {this.A}°";
     }
 }

@@ -22,9 +22,9 @@ namespace GearPhysics.v5
 
             this.Gears = new List<Gear>();
 
-            var parent = new Gear(device, Vector2.UnitX * 0.0f, 10);
+            var parent = new Gear(device, Vector2.UnitX * 0.0f, 12);
 
-            var childTeeth = 53;
+            var childTeeth = 14;
 
             // Evil that we need to create an entire gear just to get that magic Rsc value
             // Refactor into a gear description and an actual gear so that we have everything we need beforehand

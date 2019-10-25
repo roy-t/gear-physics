@@ -48,6 +48,7 @@
   <ItemGroup>
     <Compile Include="GameLoop.cs" />
     <Compile Include="Objects\Gear.cs" />
+    <Compile Include="Objects\GearConnection.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Shapes\InvoluteGearShape.cs" />

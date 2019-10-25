@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using GearSim.Objects;
 using GearSim.Shapes;
 using Microsoft.Xna.Framework;
@@ -10,13 +11,16 @@ namespace GearSim
 {
     public sealed class GameLoop : Game
     {
+        private const float DiametralPitch = 25.0f;
+        private const float PressureAngleDeg = 20.0f;
+
+        private static Random Random = new Random();
+
         private readonly GraphicsDeviceManager Graphics;
         private readonly List<Gear> Gears;
 
         private BasicEffect effect;
         private KeyboardState lastState;
-
-        private float jointAngle = MathHelper.ToRadians(20);
 
         public GameLoop()
         {
@@ -43,27 +47,54 @@ namespace GearSim
                 View = Matrix.CreateLookAt(Vector3.Backward * 10.0f, Vector3.Zero, Vector3.Up)
             };
 
-            var parentShape = new InvoluteGearShape(10, 4.0f, 20);
-            var parentGear = new Gear(parentShape, Color.Red);
-            this.Gears.Add(parentGear);
+            var teethValues = this.GenerateNumbers(4, 2);
+            var angleValues = this.GenerateNumbers(0, 25);
+            var tuples = teethValues.Zip(angleValues, (a, b) => (a, (float)b)).Take(40);
 
-
-            var childShape = new InvoluteGearShape(53, 4.0f, 20);
-            var childGear = new Gear(childShape, Color.Purple);
-
-
-            var distance = (parentShape.PitchDiameter / 2.0f) + (childShape.PitchDiameter / 2.0f);
-            
-
-            var offsetX = (float)Math.Cos(jointAngle) * distance;
-            var offsetY = (float)Math.Sin(jointAngle) * distance;
-
-            childGear.Position = new Vector3(offsetX, offsetY, 0);
-            
-
-            this.Gears.Add(childGear);
+            this.CreateDriveTrain(tuples.ToArray());
 
             base.LoadContent();
+        }
+
+        private IEnumerable<int> GenerateNumbers(int start, int increase)
+        {
+            for(var i = 0; i < int.MaxValue; i++ )
+            {
+                yield return start + (i * increase);
+            }
+        }
+
+        private void CreateDriveTrain(params (int teeth, float jointAngle)[] values)
+        {
+            Gear previousGear = null;
+
+            for (var i = 0; i < values.Length; i ++)
+            {
+                var (teeth, jointAngle) = values[i];
+
+                var shape = new InvoluteGearShape(teeth, DiametralPitch, PressureAngleDeg);
+                var gear = new Gear(shape, this.GetRandomNamedColor());
+                this.Gears.Add(gear);
+
+                if (previousGear != null)
+                {
+                    previousGear.AddChild(gear, MathHelper.ToRadians(jointAngle));
+                }
+
+                previousGear = gear;
+            }
+        }
+
+        private Color GetRandomNamedColor()
+        {
+            var colorType = typeof(Color);
+            var properties = colorType.GetProperties(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
+            var colors = properties
+                .Where(p => p.PropertyType == typeof(Color))
+                .Select(p => (Color)p.GetValue(colorType, null))
+                .ToArray();
+
+            return colors[Random.Next(colors.Length)];
         }
 
         protected override void Update(GameTime gameTime)
@@ -77,24 +108,14 @@ namespace GearSim
                 this.Exit();
             }
 
+            var rootGear = this.Gears[0];
 
-            var parentGear = this.Gears[0];
-            var childGear = this.Gears[1];
-
-            if (keyboardState.IsKeyDown(Keys.Space))
+            //if (keyboardState.IsKeyDown(Keys.Space))
             {                
-                parentGear.Rotation += elapsed * 0.5f;
+                rootGear.Rotation += elapsed * 1.5f;                
             }
 
-            var gearRatio = parentGear.Teeth / (float)childGear.Teeth;
-
-            var parentRotation = MathHelper.ToDegrees(parentGear.Rotation);
-            
-            var jointAngleDeg = MathHelper.ToDegrees(jointAngle);
-            var childRotation = 180 - ((parentRotation + jointAngleDeg) * gearRatio) - jointAngleDeg;
-
-
-            childGear.Rotation = MathHelper.ToRadians(childRotation);
+            rootGear.Update();
 
             this.lastState = keyboardState;
 
@@ -112,7 +133,7 @@ namespace GearSim
 
         protected override void Draw(GameTime gameTime)
         {
-            this.GraphicsDevice.Clear(Color.CornflowerBlue);
+            this.GraphicsDevice.Clear(Color.Black);
 
             for(var i = 0; i < this.Gears.Count; i++)
             {

@@ -44,20 +44,20 @@ namespace GearSim.Shapes
             var radiusMin = innerDiameter / 2.0f;
             var radiusMax = outerDiameter / 2.0f;
 
-            var pressureAngleRad = MathHelper.ToRadians(pressureAngle);
-            
-            // Pressure anbgle projected onto the x-axis
+            // Pressure angle projected onto the x-axis
             var rbase = pitchRadius * (float)Math.Cos(MathHelper.ToRadians(pressureAngle));
 
-            // TODO: figure out what this is!
+            // TODO: this is relative rotation the point where the tooth shape intersects with pitch circle, in degrees, how to name it?
             var ac = 0.0f;
 
             // TODO: check if we can figure out a better way to compute the number of steps the algorithm should run
             var step = 0.1f;
             var first = true;
 
-            var polarPoints = new List<Polar2>();
-            polarPoints.Add(new Polar2(radiusMin, 0));
+            var polarPoints = new List<Polar2>
+            {
+                new Polar2(radiusMin, 0)
+            };
 
             // Create a single side of a single tooth, it is nicely curved
             /*             
@@ -115,9 +115,10 @@ namespace GearSim.Shapes
             var fpa = (degreesPerTooth - ma) > 0 ? 0 : -(degreesPerTooth - ma) / 2;            
             polarPoints[0] = new Polar2(radiusMin, fpa);
 
-            var c = polarPoints.Count;
+            var c = polarPoints.Count;                        
             while (polarPoints[c - 1].A > ma / 2.0f)
-            {                
+            {
+                // Remove points with an extreme angle
                 polarPoints.RemoveRange(c - 1, 1);
                 c--;
             }
@@ -150,18 +151,19 @@ namespace GearSim.Shapes
             }
 
             // Convert back from polar to linear coordinates
+
+            var baseAngleMatrix = Matrix.CreateRotationZ(MathHelper.ToRadians(ac));
+
             this.Points = new List<Vector2>();
             for (var i = 0; i < polarPoints.Count; i++)
             {
                 var point = polarPoints[i].ToLinear();
-                var x = point.X;
-                var y = point.Y;
 
-                this.Points.Add(new Vector2(x, y));
+                // Apply a small rotation to every point so the point where a tooth should touch another gear's tooth is at 
+                // a rotation of zero degrees
+                point = Vector2.Transform(point, baseAngleMatrix);
+                this.Points.Add(point);
             }
-                  
-            // TODO: can't we transform all the points with -ToRadians(ac) so we don't need this?
-            this.BaseAngle = ac;
         }
 
         /// <summary>
@@ -183,11 +185,6 @@ namespace GearSim.Shapes
         /// In Degrees
         /// </summary>
         public float PressureAngle { get; }
-
-        /// <summary>
-        /// Angle in degrees to rotate this shape so that it's properly aligned
-        /// </summary>
-        public float BaseAngle { get; }
 
         public IReadOnlyList<Vector2> Outline => this.Points;
     }

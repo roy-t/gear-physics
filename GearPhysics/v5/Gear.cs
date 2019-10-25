@@ -74,12 +74,12 @@ namespace GearPhysics.v5
                     }
                     if (np.R > radiusMax)
                     {
-                        if (++fix < 10)
-                        {
-                            i -= step;
-                            step /= 2;
-                            continue;
-                        }
+                        //if (++fix < 10)
+                        //{
+                        //    i -= step;
+                        //    step /= 2;
+                        //    continue;
+                        //}
 
                         np.R = radiusMax;
                         polarPoints.Add(np);

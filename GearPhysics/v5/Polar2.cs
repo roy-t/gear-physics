@@ -10,7 +10,14 @@ namespace GearPhysics.v5
             this.A = a;
         }
 
+        /// <summary>
+        /// Radial distance from the reference point
+        /// </summary>
         public float R { get; set; }
+
+        /// <summary>
+        /// Angle from the reference point
+        /// </summary>
         public float A { get; set; }
 
         public static Polar2 operator +(Polar2 value1, Polar2 value2)
