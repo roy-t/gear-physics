@@ -7,36 +7,17 @@ using Microsoft.Xna.Framework.Graphics;
 namespace GearSim.Objects
 {
     public sealed class Gear
-    {
-        private readonly short[] Indices;
-        private readonly VertexPositionColor[] Vertices;
-
+    {        
         private readonly List<GearConnection> Children;
+        private readonly IVisualization Visualization;
 
         public Gear(InvoluteGearShape shape, Color color)
         {
             this.Shape = shape;
             this.Children = new List<GearConnection>(0);
 
-            this.Vertices = new VertexPositionColor[shape.Outside.Count + shape.Inside.Count];
-            this.Indices = new short[(shape.Outside.Count * 2) + (shape.Inside.Count * 2)];
-
-            this.AddCircle(color, shape.Outside, 0, 0);
-            this.AddCircle(color, shape.Inside, shape.Outside.Count, shape.Outside.Count * 2);
-        }
-
-        private void AddCircle(Color color, IReadOnlyList<Vector2> points, int vertexStart, int indexStart)
-        {
-            var ii = 0;
-            for (var i = 0; i < points.Count; i++)
-            {
-                var point = points[i];
-                var position = new Vector3(point.X, point.Y, 0.0f);
-
-                this.Vertices[vertexStart + i] = new VertexPositionColor(position, color);
-                this.Indices[indexStart + ii++] = (short)(vertexStart + i);
-                this.Indices[indexStart + ii++] = (short)(vertexStart + ((i + 1) % points.Count));
-            }
+            //this.Visualization = new LineVisualization(shape, color);
+            this.Visualization = new TriangleVisualization(shape, color);
         }
 
         public InvoluteGearShape Shape { get; }
@@ -104,10 +85,8 @@ namespace GearSim.Objects
 
         public void Draw(GraphicsDevice device, BasicEffect effect)
         {            
-            effect.World = Matrix.CreateFromAxisAngle(Vector3.Forward, this.Rotation) * Matrix.CreateTranslation(this.Position);
-            effect.CurrentTechnique.Passes[0].Apply();
-
-            device.DrawUserIndexedPrimitives(PrimitiveType.LineList, this.Vertices, 0, this.Vertices.Length, this.Indices, 0, this.Indices.Length / 2);
+            var world =  Matrix.CreateFromAxisAngle(Vector3.Forward, this.Rotation) * Matrix.CreateTranslation(this.Position);
+            this.Visualization.Draw(world, device, effect);            
         }
     }
 }

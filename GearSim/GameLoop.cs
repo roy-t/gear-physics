@@ -22,6 +22,10 @@ namespace GearSim
         private BasicEffect effect;
         private KeyboardState lastState;
 
+        private int scene;
+        private const int scenes = 4;
+        private float speed = 0.05f;
+
         public GameLoop()
         {
             this.Graphics = new GraphicsDeviceManager(this)
@@ -47,66 +51,11 @@ namespace GearSim
                 View = Matrix.CreateLookAt(Vector3.Backward * 10.0f, Vector3.Zero, Vector3.Up)
             };
 
-            var radiusMax = InvoluteGearShape.RadiusMax(150, DiametralPitch, GearType.Internal);
-
-            var shape = new InvoluteGearShape(150, DiametralPitch, radiusMax + 1.0f, this.PressureAngle, GearType.Internal);
-            var gear = new Gear(shape, this.GetRandomNamedColor());
-            this.Gears.Add(gear);
-
-            var axleRadius = InvoluteGearShape.RadiusMin(5, DiametralPitch, GearType.External) - 0.035f;
-            var shape2 = new InvoluteGearShape(100, DiametralPitch, axleRadius, this.PressureAngle);
-            var gear2 = new Gear(shape2, this.GetRandomNamedColor());
-            this.Gears.Add(gear2);
-            gear.AddChild(gear2, 0.0f);
-
-
-            var shape3 = new InvoluteGearShape(38, DiametralPitch, axleRadius, this.PressureAngle);
-            var gear3 = new Gear(shape3, this.GetRandomNamedColor());
-            this.Gears.Add(gear3);
-            gear2.AddChild(gear3, MathHelper.Pi + 0.5f);
-
-            var shape4 = new InvoluteGearShape(5, DiametralPitch, axleRadius, this.PressureAngle);
-            var gear4 = new Gear(shape4, this.GetRandomNamedColor());
-            this.Gears.Add(gear4);
-            gear3.AddChild(gear4, 1.9f);
-
-            //var teethValues = this.GenerateNumbers(4, 2);
-            //var angleValues = this.GenerateNumbers(0, 25);
-            //var tuples = teethValues.Zip(angleValues, (a, b) => (a, (float)b)).Take(40);
-            //this.CreateDriveTrain(tuples.ToArray());
-
+            this.InitializeScene();
+                                 
             base.LoadContent();
         }
-
-        private IEnumerable<int> GenerateNumbers(int start, int increase)
-        {
-            for(var i = 0; i < int.MaxValue; i++ )
-            {
-                yield return start + (i * increase);
-            }
-        }
-
-        private void CreateDriveTrain(params (int teeth, float jointAngle)[] values)
-        {
-            Gear previousGear = null;
-
-            for (var i = 0; i < values.Length; i ++)
-            {
-                var (teeth, jointAngle) = values[i];
-
-                var shape = new InvoluteGearShape(teeth, DiametralPitch, 0.01f, this.PressureAngle);
-                var gear = new Gear(shape, this.GetRandomNamedColor());
-                this.Gears.Add(gear);
-
-                if (previousGear != null)
-                {
-                    previousGear.AddChild(gear, MathHelper.ToRadians(jointAngle));
-                }
-
-                previousGear = gear;
-            }
-        }
-
+        
         private Color GetRandomNamedColor()
         {
             var colorType = typeof(Color);
@@ -130,17 +79,30 @@ namespace GearSim
                 this.Exit();
             }
 
-            var rootGear = this.Gears[0];
-
-            //if (keyboardState.IsKeyDown(Keys.Space))
-            {                
-                rootGear.Rotation += elapsed * 0.05f;                
+            if (keyboardState.IsKeyDown(Keys.Tab) && this.lastState.IsKeyUp(Keys.Tab))
+            {
+                if (keyboardState.IsKeyDown(Keys.LeftShift))
+                {
+                    this.scene = (this.scene - 1 + scenes) % scenes;
+                }
+                else
+                {
+                    this.scene = (this.scene + 1) % scenes;
+                }
+                
+                this.Gears.Clear();
+                
+                this.InitializeScene();
             }
 
+            var rootGear = this.Gears[0];            
+            if (keyboardState.IsKeyUp(Keys.Space))
+            {
+                rootGear.Rotation += elapsed * this.speed;
+            }
             rootGear.Update();
 
             this.lastState = keyboardState;
-
 
             this.effect.Projection = Matrix.CreatePerspectiveFieldOfView
             (
@@ -153,11 +115,122 @@ namespace GearSim
             base.Update(gameTime);
         }
 
+        private void InitializeScene()
+        {
+            switch(this.scene)
+            {
+                case 0:
+                    this.CreateSingleInternalGearScene();                    
+                    break;
+                case 1:
+                    this.CreateSingleExternalGearScene();
+                    break;
+                case 2:
+                    this.CreateDriveTrainScene();
+                    break;
+                case 3:
+                    this.CreateInternalGearScene();
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(this.scene));
+            }
+        }
+
+        private void CreateInternalGearScene()
+        {
+            this.speed = 0.05f;
+            var radiusMax = InvoluteGearShape.RadiusMax(150, DiametralPitch, GearType.Internal);
+
+            var shape = new InvoluteGearShape(150, DiametralPitch, radiusMax + 1.0f, this.PressureAngle, GearType.Internal);
+            var gear = new Gear(shape, this.GetRandomNamedColor());
+            this.Gears.Add(gear);
+
+            var axleRadius = InvoluteGearShape.RadiusMin(5, DiametralPitch, GearType.External) - 0.035f;
+            var shape2 = new InvoluteGearShape(100, DiametralPitch, axleRadius, this.PressureAngle);
+            var gear2 = new Gear(shape2, this.GetRandomNamedColor());
+            this.Gears.Add(gear2);
+            gear.AddChild(gear2, 0.0f);
+
+
+            var shape3 = new InvoluteGearShape(38, DiametralPitch, axleRadius, this.PressureAngle);
+            var gear3 = new Gear(shape3, this.GetRandomNamedColor());
+            this.Gears.Add(gear3);
+            gear2.AddChild(gear3, MathHelper.Pi + 0.5f);
+
+            var shape4 = new InvoluteGearShape(5, DiametralPitch, axleRadius, this.PressureAngle);
+            var gear4 = new Gear(shape4, this.GetRandomNamedColor());
+            this.Gears.Add(gear4);
+            gear3.AddChild(gear4, 1.9f);
+        }
+
+        private IEnumerable<int> GenerateNumbers(int start, int increase)
+        {
+            for (var i = 0; i < int.MaxValue; i++)
+            {
+                yield return start + (i * increase);
+            }
+        }
+
+        private void CreateDriveTrainScene()
+        {
+            this.speed = 5.0f;
+            void CreateDriveTrain(params (int teeth, float jointAngle)[] values)
+            {
+                Gear previousGear = null;
+
+                for (var i = 0; i < values.Length; i++)
+                {
+                    var (teeth, jointAngle) = values[i];
+
+                    var shape = new InvoluteGearShape(teeth, DiametralPitch, 0.02f, this.PressureAngle);
+                    var gear = new Gear(shape, this.GetRandomNamedColor());
+                    this.Gears.Add(gear);
+
+                    if (previousGear != null)
+                    {
+                        previousGear.AddChild(gear, MathHelper.ToRadians(jointAngle));
+                    }
+
+                    previousGear = gear;
+                }
+            }
+
+            var teethValues = this.GenerateNumbers(4, 2);
+            var angleValues = this.GenerateNumbers(0, 25);
+            var tuples = teethValues.Zip(angleValues, (a, b) => (a, (float)b)).Take(40);
+            CreateDriveTrain(tuples.ToArray());
+        }
+
+        private void CreateSingleInternalGearScene()
+        {
+            const int teeth = 100;
+            this.speed = 0.05f;
+            var axle = InvoluteGearShape.RadiusMax(teeth, DiametralPitch, GearType.Internal) + 0.05f;
+            var shape = new InvoluteGearShape(teeth, DiametralPitch, axle, this.PressureAngle, GearType.Internal);
+            var gear = new Gear(shape, this.GetRandomNamedColor());
+            this.Gears.Add(gear);
+        }
+
+        private void CreateSingleExternalGearScene()
+        {
+            const int teeth = 100;
+            this.speed = 0.05f;
+            var shape = new InvoluteGearShape(teeth, DiametralPitch, 0.025f, this.PressureAngle);
+            var gear = new Gear(shape, this.GetRandomNamedColor());
+            this.Gears.Add(gear);
+        }
+
         protected override void Draw(GameTime gameTime)
         {
             this.GraphicsDevice.Clear(Color.Black);
+            this.GraphicsDevice.RasterizerState = new RasterizerState()
+            {
+                //CullMode = CullMode.None,
+                //FillMode = FillMode.WireFrame
+            };
 
-            for(var i = 0; i < this.Gears.Count; i++)
+            for (var i = 0; i < this.Gears.Count; i++)
             {
                 this.Gears[i].Draw(this.GraphicsDevice, this.effect);
             }

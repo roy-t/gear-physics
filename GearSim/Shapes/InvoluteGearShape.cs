@@ -8,8 +8,7 @@ namespace GearSim.Shapes
     {
         private const float TwentyDegreesInRadians = 0.3490659f;
 
-        private readonly List<Vector2> OutsidePoints;
-        private readonly List<Vector2> InsidePoints;
+        private readonly List<Vector2> Points;
 
         /// <summary>
         /// Describes the shape of an involute gear.
@@ -24,7 +23,7 @@ namespace GearSim.Shapes
         /// The pressure angle is the angle between the tooth face and gear wheel tangent. It defines the shape of the tooth
         /// In the real world values of 14.5, 20, and 25 degrees are often used. Two interlocking gears should have the same pressure angle.
         /// </summary>
-        /// <param name="teeth">Number of teeth, should be at least 5</param>
+        /// <param name="teeth">Number of teeth, should be at least 3</param>
         /// <param name="diametralPitch">Number of teeth per inch or centimer of pitch diameter, should be more than 0</param>
         /// <param name="axleRadius">Radius of the hole for the axle, for internal gears this becomes the outer radius</param>
         /// <param name="pressureAngle">Pressure angle (specified in radians), should be between 10 and 35 degrees</param>
@@ -35,8 +34,7 @@ namespace GearSim.Shapes
             CheckDiameteralPitch(diametralPitch);
             CheckPressureAngle(pressureAngle);
 
-            this.OutsidePoints = new List<Vector2>();
-            this.InsidePoints = new List<Vector2>();
+            this.Points = new List<Vector2>();
 
             var pitchDiameter = teeth / diametralPitch;
             var pitchRadius = pitchDiameter / 2.0f;
@@ -46,6 +44,7 @@ namespace GearSim.Shapes
             this.PitchDiameter = pitchDiameter;
             this.PressureAngle = pressureAngle;
             this.GearType = gearType;
+            this.AxleRadius = axleRadius;
 
             var radiusMin = RadiusMin(teeth, diametralPitch, gearType);
             var radiusMax = RadiusMax(teeth, diametralPitch, gearType);
@@ -161,7 +160,6 @@ namespace GearSim.Shapes
 
             var baseAngleMatrix = Matrix.CreateRotationZ(MathHelper.ToRadians(ac));
 
-            var points = gearType == GearType.Internal ? this.InsidePoints : this.OutsidePoints;
             for (var i = 0; i < polarPoints.Count; i++)
             {
                 var point = polarPoints[i].ToLinear();
@@ -169,17 +167,8 @@ namespace GearSim.Shapes
                 // Apply a small rotation to every point so the point where a tooth should touch another gear's tooth is at 
                 // a rotation of zero degrees
                 point = Vector2.Transform(point, baseAngleMatrix);
-                points.Add(point);
-            }
-
-            if (gearType == GearType.Internal)
-            {
-                this.OutsidePoints = this.CreateCircle(this.InsidePoints.Count, axleRadius);
-            }
-            else
-            {
-                this.InsidePoints = this.CreateCircle(this.OutsidePoints.Count, axleRadius);
-            }
+                this.Points.Add(point);
+            }            
         }       
 
         /// <summary>
@@ -207,23 +196,15 @@ namespace GearSim.Shapes
         /// </summary>
         public float PressureAngle { get; }
 
-        public IReadOnlyList<Vector2> Outside => this.OutsidePoints;
-        public IReadOnlyList<Vector2> Inside => this.InsidePoints;
+        /// <summary>
+        /// Radius of the hole for the axle, for internal gears this becomes the outer radius</param>
+        /// </summary>
+        public float AxleRadius { get; }
 
-        private List<Vector2> CreateCircle(int steps, float radius)
-        {
-            var points = new List<Vector2>();
-
-            var stepSize = MathHelper.TwoPi / steps;
-            for (var i = 0; i < steps; i++)
-            {
-                var x = (float)Math.Sin(stepSize * i) * radius;
-                var y = (float)Math.Cos(stepSize * i) * radius;
-                points.Add(new Vector2(x, y));
-            }
-
-            return points;
-        }
+        /// <summary>
+        /// Outline of the teeth of the gear
+        /// </summary>
+        public IReadOnlyList<Vector2> Outline => this.Points;       
 
         public static float RadiusMax(int teeth, float diametralPitch, GearType gearType)
         {
@@ -273,9 +254,9 @@ namespace GearSim.Shapes
 
         private static void CheckTeeth(int teeth)
         {
-            if (teeth < 5)
+            if (teeth < 3)
             {
-                throw new ArgumentOutOfRangeException(nameof(teeth), "A gear should have at least 5 teeth");
+                throw new ArgumentOutOfRangeException(nameof(teeth), "A gear should have at least 3 teeth");
             }
         }
     }
