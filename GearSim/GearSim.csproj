@@ -51,6 +51,7 @@
     <Compile Include="Objects\GearConnection.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Shapes\GearType.cs" />
     <Compile Include="Shapes\InvoluteGearShape.cs" />
     <Compile Include="Shapes\Polar2.cs" />
   </ItemGroup>

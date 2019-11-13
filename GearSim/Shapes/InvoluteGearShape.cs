@@ -6,14 +6,13 @@ namespace GearSim.Shapes
 {
     public sealed class InvoluteGearShape
     {
-        private readonly List<Vector2> Points;
+        private readonly List<Vector2> OutsidePoints;
+        private readonly List<Vector2> InsidePoints;
 
         /// <summary>
         /// Describes the shape of an involute gear.
-        ///         
-        /// Every gear has a pitch circle. If two gears are interlocking their pitch circles should touch, but not opverlap. 
-        /// 
-        /// Gears touch at specifics point on a their tooth. The pitch circle is the circle that that encompasses all these points.
+        ///                 
+        /// Gears should touch at specific point on a their teeth. The pitch circle is the circle that encompasses all these points.
         /// If two gears are interlocking their pitch circles should touch, but not opverlap. The pitch diameter is the diameter of 
         /// the pitch circle. It is defined as teeth / diametral pitch.
         /// 
@@ -25,10 +24,12 @@ namespace GearSim.Shapes
         /// </summary>
         /// <param name="teeth">Number of teeth</param>
         /// <param name="diametralPitch">Number of teeth per inch of pitch diameter</param>
-        /// <param name="pressureAngle">Pressure angle (in degrees)</param>
-        public InvoluteGearShape(int teeth, float diametralPitch, float pressureAngle = 20.0f)
+        /// <param name="pressureAngle">Pressure angle (in radians)</param>
+        /// <param name="gearType">Wether this is an internal gear (teeth on the inside) or an external gear (teeth on the outside)</param>
+        public InvoluteGearShape(int teeth, float diametralPitch, float pressureAngle = MathHelper.Pi * 0.1f, GearType gearType = GearType.External)
         {
-            this.Points = new List<Vector2>();
+            this.OutsidePoints = new List<Vector2>();
+            this.InsidePoints = new List<Vector2>();
 
             var pitchDiameter = teeth / diametralPitch;
             var pitchRadius = pitchDiameter / 2.0f;
@@ -37,15 +38,16 @@ namespace GearSim.Shapes
             this.DiametralPitch = diametralPitch;
             this.PitchDiameter = pitchDiameter;
             this.PressureAngle = pressureAngle;
+            this.GearType = gearType;
 
-            var outerDiameter = (teeth + 2.0f) / diametralPitch;
-            var innerDiameter = (teeth - 2.3f) / diametralPitch;
+            var outerDiameter = (teeth + (gearType == GearType.Internal ? 2.3f : 2.0f)) / diametralPitch;
+            var innerDiameter = (teeth - (gearType == GearType.Internal ? 2.0f : 2.3f)) / diametralPitch;
 
             var radiusMin = innerDiameter / 2.0f;
             var radiusMax = outerDiameter / 2.0f;
 
             // Pressure angle projected onto the x-axis
-            var rbase = pitchRadius * (float)Math.Cos(MathHelper.ToRadians(pressureAngle));
+            var rbase = pitchRadius * (float)Math.Cos(pressureAngle);
 
             // TODO: this is relative rotation the point where the tooth shape intersects with pitch circle, in degrees, how to name it?
             var ac = 0.0f;
@@ -100,7 +102,7 @@ namespace GearSim.Shapes
                     }
                 }
             }
-             
+
             /*
              * Remove artefacts at the top
              *    X
@@ -112,10 +114,10 @@ namespace GearSim.Shapes
             var degreesPerTooth = 360.0f / teeth;
             var ma = (degreesPerTooth / 2) + (2 * ac);
 
-            var fpa = (degreesPerTooth - ma) > 0 ? 0 : -(degreesPerTooth - ma) / 2;            
+            var fpa = (degreesPerTooth - ma) > 0 ? 0 : -(degreesPerTooth - ma) / 2;
             polarPoints[0] = new Polar2(radiusMin, fpa);
 
-            var c = polarPoints.Count;                        
+            var c = polarPoints.Count;
             while (polarPoints[c - 1].A > ma / 2.0f)
             {
                 // Remove points with an extreme angle
@@ -123,7 +125,7 @@ namespace GearSim.Shapes
                 c--;
             }
 
-            // Mirror the side and connect the two via along the top
+            // Mirror the side and connect the two along the top
             /*             
              *    /---\
              *   /     \ 
@@ -154,7 +156,7 @@ namespace GearSim.Shapes
 
             var baseAngleMatrix = Matrix.CreateRotationZ(MathHelper.ToRadians(ac));
 
-            this.Points = new List<Vector2>();
+            var points = gearType == GearType.Internal ? this.InsidePoints : this.OutsidePoints;
             for (var i = 0; i < polarPoints.Count; i++)
             {
                 var point = polarPoints[i].ToLinear();
@@ -162,9 +164,38 @@ namespace GearSim.Shapes
                 // Apply a small rotation to every point so the point where a tooth should touch another gear's tooth is at 
                 // a rotation of zero degrees
                 point = Vector2.Transform(point, baseAngleMatrix);
-                this.Points.Add(point);
+                points.Add(point);
+            }
+
+            if (gearType == GearType.Internal)
+            {
+                this.OutsidePoints = this.CreateCircle(points.Count, outerDiameter * 0.6f);
+            }
+            else
+            {
+                this.InsidePoints = this.CreateCircle(points.Count, innerDiameter * 0.2f);
             }
         }
+
+        private List<Vector2> CreateCircle(int steps, float radius)
+        {
+            var points = new List<Vector2>();
+
+            var stepSize = MathHelper.TwoPi / steps;
+            for (var i = 0; i < steps; i++)
+            {
+                var x = (float)Math.Sin(stepSize * i) * radius;
+                var y = (float)Math.Cos(stepSize * i) * radius;
+                points.Add(new Vector2(x, y));
+            }
+
+            return points;
+        }
+
+        /// <summary>
+        /// Wether this is an internal gear (teeth on the inside) or external gear (teeth on the outside
+        /// </summary>
+        public GearType GearType { get; }
 
         /// <summary>
         /// Number of teeth
@@ -186,6 +217,7 @@ namespace GearSim.Shapes
         /// </summary>
         public float PressureAngle { get; }
 
-        public IReadOnlyList<Vector2> Outline => this.Points;
+        public IReadOnlyList<Vector2> Outside => this.OutsidePoints;
+        public IReadOnlyList<Vector2> Inside => this.InsidePoints;
     }
 }
