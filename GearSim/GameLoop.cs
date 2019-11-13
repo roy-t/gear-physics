@@ -11,7 +11,7 @@ namespace GearSim
 {
     public sealed class GameLoop : Game
     {
-        private const float DiametralPitch = 25.0f;
+        private const float DiametralPitch = 20.0f;
         private readonly float PressureAngle = MathHelper.ToRadians(20);
 
         private static Random Random = new Random();
@@ -47,22 +47,25 @@ namespace GearSim
                 View = Matrix.CreateLookAt(Vector3.Backward * 10.0f, Vector3.Zero, Vector3.Up)
             };
 
-            var shape = new InvoluteGearShape(150, DiametralPitch, PressureAngle, GearType.Internal);
+            var radiusMax = InvoluteGearShape.RadiusMax(150, DiametralPitch, GearType.Internal);
+
+            var shape = new InvoluteGearShape(150, DiametralPitch, radiusMax + 1.0f, this.PressureAngle, GearType.Internal);
             var gear = new Gear(shape, this.GetRandomNamedColor());
             this.Gears.Add(gear);
 
-            var shape2 = new InvoluteGearShape(100, DiametralPitch, PressureAngle);
+            var axleRadius = InvoluteGearShape.RadiusMin(5, DiametralPitch, GearType.External) - 0.035f;
+            var shape2 = new InvoluteGearShape(100, DiametralPitch, axleRadius, this.PressureAngle);
             var gear2 = new Gear(shape2, this.GetRandomNamedColor());
             this.Gears.Add(gear2);
             gear.AddChild(gear2, 0.0f);
 
 
-            var shape3 = new InvoluteGearShape(38, DiametralPitch, PressureAngle);
+            var shape3 = new InvoluteGearShape(38, DiametralPitch, axleRadius, this.PressureAngle);
             var gear3 = new Gear(shape3, this.GetRandomNamedColor());
             this.Gears.Add(gear3);
             gear2.AddChild(gear3, MathHelper.Pi + 0.5f);
 
-            var shape4 = new InvoluteGearShape(6, DiametralPitch, PressureAngle);
+            var shape4 = new InvoluteGearShape(5, DiametralPitch, axleRadius, this.PressureAngle);
             var gear4 = new Gear(shape4, this.GetRandomNamedColor());
             this.Gears.Add(gear4);
             gear3.AddChild(gear4, 1.9f);
@@ -91,7 +94,7 @@ namespace GearSim
             {
                 var (teeth, jointAngle) = values[i];
 
-                var shape = new InvoluteGearShape(teeth, DiametralPitch, PressureAngle);
+                var shape = new InvoluteGearShape(teeth, DiametralPitch, 0.01f, this.PressureAngle);
                 var gear = new Gear(shape, this.GetRandomNamedColor());
                 this.Gears.Add(gear);
 
