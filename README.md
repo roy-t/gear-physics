@@ -12,9 +12,10 @@ Already implemented
     - Diametral pitch (size of teeth expressed as number of teeth per inch or centimeter of the pitch diameter)
     - Pressure angle
 - Placement and rotation so that gears rotate perfectly interlocked
+- Internal gears, as in [this example](https://geargenerator.com/)
 
 TODO:
 - 3D model generation
 - UV coordinate generation
 - Texture generation
-- Internal gears, as in [this example](https://geargenerator.com/)
+- Rotation counters
